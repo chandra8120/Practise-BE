@@ -1,10 +1,10 @@
-import Sekhar from "./sekharModel.js";
+import Sekhar from "../model/multipleImagesModel.js";
 import multer from "multer";
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage }).array("multipleImages"); // Assuming the field name is "multipleImages"
 
-const sekharController = {
+const multipleImagesController = {
     createSekhar: async (req, res) => {
         try {
             upload(req, res, async (err) => {
@@ -48,4 +48,4 @@ const sekharController = {
 
 };
 
-export default sekharController;
+export default multipleImagesController;

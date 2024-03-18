@@ -1,10 +1,13 @@
 import express from 'express'
-import sekharController from './sekharController.js'
+import multipleImagesController from './controller/multipleImagesController.js'
+import shirtController from './controller/shirtsController.js'
 
 
 const router=express.Router()
 
-router.post("/post",sekharController.createSekhar)
-router.get("/get",sekharController.getAllSekhars)
+router.post("/post",multipleImagesController.createSekhar)
+router.get("/get",multipleImagesController.getAllSekhars)
 
+router.post("/postshirt",shirtController.createShirt)
+router.get("/getshirts",shirtController.getAllShirts)
 export default router

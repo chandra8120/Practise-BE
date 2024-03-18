@@ -1,4 +1,4 @@
-import Login from "./loginModel.js";
+import Login from "../model/loginModel.js";
 import bcrypt from 'bcrypt'
 
 const loginController={
