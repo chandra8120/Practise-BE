@@ -10,7 +10,7 @@ const app = express();
 
 const PORT = process.env.PORT || 4000;
 
-app.use(cors()); // Invoke cors middleware to enable CORSs
+app.use(cors()); // Invoke cors middleware to enable CORS
 
 // Parse JSON requests with a size limit of 30mb..
 app.use(express.json({ limit: "30mb" }));
