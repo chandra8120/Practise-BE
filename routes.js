@@ -10,6 +10,7 @@ const router=express.Router()
 
 router.post("/signup",loginController.signup)
 router.post('/login',loginController.login)
+router.post('/logout',loginController.logout)
 
 router.post("/post",multipleImagesController.createSekhar)
 router.get("/get",multipleImagesController.getAllSekhars)
@@ -27,4 +28,4 @@ router.get('/getAllPractise',practiseController.getAllPractise)
 
 
 
-export default router
+export default router 

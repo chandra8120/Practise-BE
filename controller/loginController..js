@@ -1,73 +1,102 @@
-import Login from "../model/loginModel.js";
 import bcrypt from 'bcrypt';
+import User from '../model/loginModel.js';
 
-const loginController = {
-    signup: async (req, res) => {
-        try {
-            const { email, password } = req.body;
-            if (!email || !password) {
-                return res.status(400).json({ message: "Email and password are required" });
-            }
-            const existingUser = await Login.findOne({ email });
-            if (existingUser) {
-                return res.status(400).json({ message: "User already exists" });
-            }
-            const hashedPassword = await bcrypt.hash(password, 10);
-            const newUser = new Login({ email, password: hashedPassword });
-            const savedUser = await newUser.save();
-            res.status(201).json({ message: "Signup successful", user: savedUser });
-        } catch (error) {
-            console.error('Error in signup:', error);
-            res.status(500).json({ error: "Internal server error" });
-        }
-    },
-   
-        
-    login: async (req, res) => {
-        try {
-            const { email, password } = req.body;
-            const user = await Login.findOne({ email });
-            if (!user) {
-                return res.status(404).json({ message: "User not found" });
-            }
-            const isPasswordValid = await bcrypt.compare(password, user.password);
-            if (!isPasswordValid) {
-                return res.status(400).json({ message: "Invalid password" });
-            }
+// Object to store active sessions
+const activeSessions = {};
 
-            // Check if the user is already logged in from another device
-            if (user.sessionToken) {
-                // Optionally, you can invalidate the previous session token here
-                // You can remove the session token from the user document or store it in a blacklist
-                // This depends on your application's requirements
-                // For simplicity, I'm assuming here that the previous token is being invalidated
-                user.sessionToken = null;
-                await user.save();
-            }
+const userController = {
+  signup: async function (req, res) {
+    try {
+      const { email, password } = req.body;
 
-            // Generate a new session token and save it to the user document
-            const sessionToken = generateSessionToken();
-            user.sessionToken = sessionToken;
-            await user.save();
+      // Check if the email is already registered
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ error: 'User with this email already exists' });
+      }
 
-            res.status(200).json({ message: "Login successful", user });
-        } catch (error) {
-            console.error('Error in login:', error);
-            res.status(500).json({ error: "Internal server error" });
-        }
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const newUser = new User({
+        email,
+        password: hashedPassword,
+      });
+
+      await newUser.save();
+
+      res.status(201).json({ message: 'User registered successfully' });
+    } catch (error) {
+      console.error('Error during signup:', error);
+      res.status(500).json({ error: 'Failed to signup' });
     }
+  },
+
+  
+  logout: function (req, res) {
+    try {
+      const userId = req.user._id; // Assuming you have middleware to attach user information to the request object
+      if (!userId || !activeSessions[userId]) {
+        return res.status(404).json({ error: 'User not found or not logged in' });
+      }
+
+      // Remove the session token associated with the user
+      delete activeSessions[userId];
+
+      res.status(200).json({ message: 'Logout successful' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  },
+
+  login: async function (req, res) {
+    try {
+      const { email, password } = req.body;
+
+      const user = await User.findOne({ email });
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+
+      if (!isPasswordValid) {
+        return res.status(401).json({ error: 'Invalid password' });
+      }
+
+      // Check if the user already has an active session
+      if (activeSessions[user._id]) {
+        return res.status(409).json({ error: 'User already logged in on another device' });
+      }
+
+      // Generate a session token (You can use JWT or any other session token mechanism)
+      const sessionToken = generateSessionToken();
+
+      // Store the session token for the user
+      activeSessions[user._id] = sessionToken;
+
+      const userDataToSend = {
+        _id: user._id,
+        email: user.email,
+        sessionToken: sessionToken
+      };
+
+      res.status(200).json({
+        message: 'Login successful',
+        user: userDataToSend,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
 };
 
-
-
-// Function to generate session token
 function generateSessionToken() {
-    // Generate a random token using any method you prefer
-    // For simplicity, you can use libraries like 'uuid' to generate unique tokens
-    // Example using 'uuid':
-    // const { v4: uuidv4 } = require('uuid');
-    // const sessionToken = uuidv4();
-    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  // Generate a random session token
+  return Math.random().toString(36).substr(2);
 }
 
-export default loginController;
+
+export default userController;

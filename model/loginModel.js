@@ -4,5 +4,5 @@ const loginSchema=new Schema({
     email:{type:String,required:true,unique:true},
     password:{type:String,required:true},
 })
-const Login=model("Login",loginSchema)
-export default Login
+const User=model("User",loginSchema)
+export default User
