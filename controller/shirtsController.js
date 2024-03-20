@@ -10,6 +10,7 @@ const shirtController = {
         async (req, res) => {
             try {
                 const { name, price, link } = req.body;
+                
                 const image = req.file.buffer.toString("base64");
 
                 // Validate required fields
@@ -34,6 +35,28 @@ const shirtController = {
         } catch (error) {
             console.error('Error getting all shirts:', error);
             res.status(500).json({ error: "Failed to get the data" });
+        }
+    },
+
+    deleteShirt: async (req, res) => {
+        try {
+            const { id } = req.params;
+
+            // Check if the ID is valid
+            if (!id) {
+                return res.status(400).json({ message: "Shirt ID is required" });
+            }
+
+            const deletedShirt = await Shirt.findByIdAndDelete(id);
+
+            if (!deletedShirt) {
+                return res.status(404).json({ message: "Shirt not found" });
+            }
+
+            res.status(200).json({ message: "Shirt deleted successfully", deletedShirt });
+        } catch (error) {
+            console.error('Error deleting shirt:', error);
+            res.status(500).json({ error: 'Internal server error' });
         }
     }
 };
